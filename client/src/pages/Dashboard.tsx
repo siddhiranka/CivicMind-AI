@@ -6,7 +6,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const LiveMapChild = ({ center, zoom }: { center: { lat: number, lng: number }, zoom: number }) => {
-  const map = useMap("DEMO_MAP_ID");
+  const map = useMap("main-map");
   useEffect(() => {
      if (map) {
         map.panTo(center);
@@ -272,6 +272,7 @@ const Dashboard = () => {
               </div>
               <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                  <Map 
+                    id="main-map"
                     defaultCenter={{lat: 19.0760, lng: 72.8777}}
                     defaultZoom={11}
                     mapId="DEMO_MAP_ID"
