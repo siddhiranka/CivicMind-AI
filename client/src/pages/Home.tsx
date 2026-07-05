@@ -2,9 +2,11 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronRight, ShieldAlert, Sparkles, AlertTriangle, TrendingUp, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = ({ onOpenChat }: { onOpenChat: () => void }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { scrollYProgress } = useScroll();
   const yBackground = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
@@ -55,20 +57,20 @@ const Home = ({ onOpenChat }: { onOpenChat: () => void }) => {
             className="flex flex-col sm:flex-row gap-4"
           >
             <button 
-              onClick={() => navigate('/report')}
+              onClick={() => user ? navigate('/report') : navigate('/signup')}
               className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_40px_rgba(37,99,235,0.8)] hover:-translate-y-1 relative overflow-hidden group border border-blue-400/50"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
               <span className="relative z-10 flex items-center gap-2">Report an Issue <ChevronRight size={20} /></span>
             </button>
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => user ? navigate('/dashboard') : navigate('/signup')}
               className="px-8 py-4 rounded-xl bg-secondary text-secondary-foreground font-semibold flex items-center justify-center gap-2 hover:bg-secondary/80 hover:-translate-y-1 hover:shadow-lg transition-all backdrop-blur-md border border-white/5"
             >
               Explore Dashboard
             </button>
             <button 
-              onClick={onOpenChat}
+              onClick={() => user ? onOpenChat() : navigate('/signup')}
               className="px-8 py-4 rounded-xl border border-border bg-background/50 text-foreground font-semibold flex items-center justify-center gap-2 hover:bg-accent hover:-translate-y-1 hover:shadow-lg transition-all backdrop-blur-md"
             >
               Talk to Civic AI
@@ -136,7 +138,7 @@ const Home = ({ onOpenChat }: { onOpenChat: () => void }) => {
       {/* Final Call to Action */}
       <section className="py-32 px-4 text-center">
          <h2 className="text-4xl font-bold mb-8">Every report creates change. Every decision shapes a smarter community.</h2>
-         <button onClick={() => navigate('/report')} className="px-10 py-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(79,70,229,0.5)]">
+         <button onClick={() => user ? navigate('/report') : navigate('/signup')} className="px-10 py-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(79,70,229,0.5)]">
             Start Building a Better Tomorrow
          </button>
       </section>
