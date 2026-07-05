@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Report = () => {
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState('');
+  const [locationStr, setLocationStr] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   
@@ -64,6 +65,7 @@ const Report = () => {
     
     const formData = new FormData();
     formData.append('description', description);
+    formData.append('locationStr', locationStr);
     formData.append('image', file);
     formData.append('hasGps', loc.hasGps ? 'true' : 'false');
     if (loc.hasGps) {
@@ -138,11 +140,19 @@ const Report = () => {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. There is a huge pothole near Sudama Nagar main road causing traffic..."
+                  placeholder="e.g. There is a huge pothole causing traffic..."
                   className="w-full h-32 bg-background/50 border border-border/50 rounded-2xl p-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none shadow-inner"
                 />
+                <h2 className="text-xl font-bold mt-4">Where is it located?</h2>
+                <input 
+                  type="text"
+                  value={locationStr}
+                  onChange={(e) => setLocationStr(e.target.value)}
+                  placeholder="e.g. 123 Main Street, Andheri East"
+                  className="w-full bg-background/50 border border-border/50 rounded-xl p-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-inner"
+                />
                 <button
-                  disabled={!description.trim()}
+                  disabled={!description.trim() || !locationStr.trim()}
                   onClick={() => setStep(2)}
                   className="px-8 py-4 bg-primary text-primary-foreground rounded-xl font-bold ml-auto flex items-center gap-2 hover:bg-primary/90 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:-translate-y-1"
                 >

@@ -6,7 +6,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 exports.createComplaint = async (req, res) => {
     try {
-        const { description, hasGps, lat, lng } = req.body;
+        const { description, locationStr, hasGps, lat, lng } = req.body;
         
         if (!req.file) {
             return res.status(400).json({ error: 'Image is required' });
@@ -20,7 +20,8 @@ exports.createComplaint = async (req, res) => {
 
         // 2. Analyze with Gemini Vision
         const prompt = `Analyze this image in the context of community infrastructure and safety. 
-        The user described the location and issue as: "${description}".
+        The user described the issue as: "${description}".
+        The user claimed this is located at: "${locationStr}".
         User GPS Data Provided: ${hasGps === 'true' ? 'YES (Lat: ' + lat + ', Lng: ' + lng + ')' : 'NO'}.
         
         CRITICAL TASK: Act as an Enterprise Decision Intelligence AI. 
@@ -108,7 +109,7 @@ exports.createComplaint = async (req, res) => {
                 estimatedPriority: aiResult.estimatedPriority,
                 priorityScore: aiResult.priorityScore,
                 status: 'Pending',
-                location: { lat: finalLat, lng: finalLng, address: 'Reported Location' },
+                location: { lat: finalLat, lng: finalLng, address: locationStr || 'Reported Location' },
                 evidence: {
                     sceneMatch: aiResult.evidenceAssessment?.sceneMatch || 0,
                     gpsAvailable: hasGps === 'true',
