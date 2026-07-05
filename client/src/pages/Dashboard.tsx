@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapIcon, AlertTriangle, CheckCircle2, Info, FileText, Download, Filter, Search, Database, Bot, ChevronRight, MapPin, Activity } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const LiveMapChild = ({ center, zoom }: { center: { lat: number, lng: number }, zoom: number }) => {
-  const map = useMap();
+  const map = useMap("DEMO_MAP_ID");
   useEffect(() => {
      if (map) {
         map.panTo(center);
@@ -123,7 +123,7 @@ const Dashboard = () => {
         ]);
 
         // @ts-ignore
-        doc.autoTable({
+        autoTable(doc, {
            startY: 40,
            head: [['ID', 'Issue', 'Location', 'Priority', 'Status']],
            body: tableData,
