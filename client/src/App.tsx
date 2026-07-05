@@ -21,9 +21,14 @@ const Header = ({ onOpenChat }: { onOpenChat: () => void }) => {
       </h1>
       <nav className="flex items-center gap-6 font-medium text-sm">
         <a href="/" className="hover:text-primary transition-colors">Home</a>
-        <a href="/report" className="hover:text-primary transition-colors">Report Issue</a>
-        <a href="/track" className="hover:text-primary transition-colors">Track Complaint</a>
-        <a href="/dashboard" className="hover:text-primary transition-colors">Dashboard</a>
+        
+        {user && (
+          <>
+            <a href="/report" className="hover:text-primary transition-colors">Report Issue</a>
+            <a href="/track" className="hover:text-primary transition-colors">Track Complaint</a>
+            <a href="/dashboard" className="hover:text-primary transition-colors">Dashboard</a>
+          </>
+        )}
         
         {user ? (
           <div className="flex items-center gap-4 ml-4 border-l border-border pl-4">
