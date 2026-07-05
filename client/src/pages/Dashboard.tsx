@@ -272,12 +272,8 @@ const Dashboard = () => {
               </div>
               <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                  <Map 
-                    center={mapCenter}
-                    zoom={mapZoom}
-                    onCameraChanged={(ev) => {
-                        setMapCenter(ev.detail.center);
-                        setMapZoom(ev.detail.zoom);
-                    }}
+                    defaultCenter={{lat: 19.0760, lng: 72.8777}}
+                    defaultZoom={11}
                     mapId="DEMO_MAP_ID"
                     colorScheme="DARK"
                     onClick={() => setSelectedComplaint(null)}
