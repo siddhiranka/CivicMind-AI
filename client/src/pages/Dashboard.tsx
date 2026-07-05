@@ -5,17 +5,6 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const LiveMapChild = ({ center, zoom }: { center: { lat: number, lng: number }, zoom: number }) => {
-  const map = useMap("main-map");
-  useEffect(() => {
-     if (map) {
-        map.panTo(center);
-        map.setZoom(zoom);
-     }
-  }, [map, center, zoom]);
-  return null;
-};
-
 const Dashboard = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
@@ -272,14 +261,12 @@ const Dashboard = () => {
               </div>
               <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                  <Map 
-                    id="main-map"
-                    defaultCenter={{lat: 19.0760, lng: 72.8777}}
-                    defaultZoom={11}
+                    center={mapCenter}
+                    zoom={mapZoom}
                     mapId="DEMO_MAP_ID"
                     colorScheme="DARK"
                     onClick={() => setSelectedComplaint(null)}
                  >
-                    <LiveMapChild center={mapCenter} zoom={mapZoom} />
                     {complaints.map((c, idx) => {
                        if (!c.location || !c.location.lat) return null;
                        const isCritical = c.severity === 'Critical' || c.severity === 'High';
