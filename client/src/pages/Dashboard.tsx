@@ -5,7 +5,7 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-const LiveMapChild = ({ center, zoom }: { center: google.maps.LatLngLiteral, zoom: number }) => {
+const LiveMapChild = ({ center, zoom }: { center: { lat: number, lng: number }, zoom: number }) => {
   const map = useMap();
   useEffect(() => {
      if (map) {
