@@ -10,6 +10,8 @@ const Dashboard = () => {
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
+  const [mapCenter, setMapCenter] = useState({lat: 19.0760, lng: 72.8777});
+  const [mapZoom, setMapZoom] = useState(11);
 
   const fetchComplaints = () => {
     fetch('/api/complaints')
@@ -21,6 +23,20 @@ const Dashboard = () => {
   useEffect(() => {
     fetchComplaints();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim().length > 2) {
+       const result = complaints.find(c => 
+          (c.complaintId && c.complaintId.toLowerCase().includes(searchQuery.toLowerCase())) || 
+          (c.location?.address && c.location.address.toLowerCase().includes(searchQuery.toLowerCase()))
+       );
+       if (result && result.location?.lat) {
+           setMapCenter({lat: result.location.lat, lng: result.location.lng});
+           setMapZoom(15);
+           setSelectedComplaint(result);
+       }
+    }
+  }, [searchQuery, complaints]);
 
   const handleSeed = async () => {
     setIsSeeding(true);
@@ -121,9 +137,6 @@ const Dashboard = () => {
                     className="bg-background border border-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-48 lg:w-64"
                  />
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-medium hover:bg-secondary/80">
-                 <Filter size={16}/> Filter
-              </button>
               <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-medium hover:bg-secondary/80">
                  <Download size={16}/> Export PDF
               </button>
@@ -202,8 +215,12 @@ const Dashboard = () => {
               </div>
               <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                  <Map 
-                    defaultCenter={{lat: 19.0760, lng: 72.8777}} // Default to Mumbai
-                    defaultZoom={11}
+                    center={mapCenter}
+                    zoom={mapZoom}
+                    onCameraChanged={(ev) => {
+                        setMapCenter(ev.detail.center);
+                        setMapZoom(ev.detail.zoom);
+                    }}
                     mapId="DEMO_MAP_ID"
                     colorScheme="DARK"
                     onClick={() => setSelectedComplaint(null)}
