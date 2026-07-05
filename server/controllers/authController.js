@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const secret = process.env.JWT_SECRET || 'civicmind_super_secret_hackathon_key_123';
+    return jwt.sign({ id }, secret, { expiresIn: '30d' });
 };
 
 exports.register = async (req, res) => {
