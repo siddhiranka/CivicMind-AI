@@ -26,17 +26,45 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (searchQuery.trim().length > 2) {
-       const result = complaints.find(c => 
-          (c.complaintId && c.complaintId.toLowerCase().includes(searchQuery.toLowerCase())) || 
-          (c.location?.address && c.location.address.toLowerCase().includes(searchQuery.toLowerCase()))
-       );
-       if (result && result.location?.lat) {
-           setMapCenter({lat: result.location.lat, lng: result.location.lng});
-           setMapZoom(15);
-           setSelectedComplaint(result);
-       }
-    }
+    const handleSearch = async () => {
+      if (searchQuery.trim().length > 2) {
+         // 1. Try to find a specific complaint ID first
+         const result = complaints.find(c => 
+            (c.complaintId && c.complaintId.toLowerCase().includes(searchQuery.toLowerCase()))
+         );
+         
+         if (result && result.location?.lat) {
+             setMapCenter({lat: result.location.lat, lng: result.location.lng});
+             setMapZoom(16);
+             setSelectedComplaint(result);
+             return;
+         }
+
+         // 2. Otherwise, use Google Geocoding API for real-world locations
+         try {
+            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            if (!apiKey) return;
+            
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`);
+            const data = await res.json();
+            
+            if (data.status === "OK" && data.results.length > 0) {
+               const loc = data.results[0].geometry.location;
+               setMapCenter({lat: loc.lat, lng: loc.lng});
+               setMapZoom(13);
+               setSelectedComplaint(null);
+            }
+         } catch (e) {
+            console.error("Geocoding failed", e);
+         }
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+       handleSearch();
+    }, 800);
+
+    return () => clearTimeout(timeoutId);
   }, [searchQuery, complaints]);
 
   const handleSeed = async () => {
