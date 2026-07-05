@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Trash2, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatBotProps {
@@ -14,12 +14,20 @@ interface Message {
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([
+  const defaultMessages: Message[] = [
     { role: 'ai', content: "Hello! I'm CivicMind AI. Ask me about live community issues, priority recommendations, or predictive trends." }
-  ]);
+  ];
+  const [messages, setMessages] = useState<Message[]>(defaultMessages);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const suggestions = [
+    "Summarize all issues",
+    "What is the most critical issue?",
+    "Which areas need attention?"
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,19 +37,29 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
+
+  const handleClear = () => {
+    setMessages(defaultMessages);
+  };
+
+  const handleSend = async (overrideMsg?: string) => {
+    const msgToSend = overrideMsg || input;
+    if (!msgToSend.trim()) return;
     
-    const userMsg = input.trim();
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: msgToSend.trim() }]);
+    if (!overrideMsg) setInput('');
     setIsTyping(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg })
+        body: JSON.stringify({ message: msgToSend.trim() })
       });
       const data = await res.json();
       
@@ -50,6 +68,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
       setMessages(prev => [...prev, { role: 'ai', content: "Sorry, I'm having trouble connecting to the network right now." }]);
     } finally {
       setIsTyping(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
@@ -57,21 +76,28 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          drag
+          dragConstraints={{ top: -500, left: -800, right: 0, bottom: 0 }}
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: "spring", bounce: 0.3 }}
-          className="fixed bottom-24 right-6 w-[450px] h-[550px] bg-background/70 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-3xl flex flex-col overflow-hidden z-50"
+          className="fixed bottom-24 right-6 w-[400px] md:w-[450px] h-[600px] bg-background/80 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-3xl flex flex-col overflow-hidden z-50 cursor-default"
         >
           {/* Header */}
-          <div className="p-4 bg-primary text-primary-foreground flex justify-between items-center">
+          <div className="p-4 bg-primary text-primary-foreground flex justify-between items-center cursor-grab active:cursor-grabbing border-b border-primary-foreground/20">
             <div className="flex items-center gap-2">
               <Bot size={24} />
-              <h3 className="font-bold">Civic AI Assistant</h3>
+              <h3 className="font-bold tracking-wide">CivicMind AI</h3>
             </div>
-            <button onClick={onClose} className="hover:bg-primary/50 p-1 rounded-full transition-colors">
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={handleClear} className="hover:bg-primary-foreground/20 p-2 rounded-full transition-colors" title="Clear Chat">
+                <Trash2 size={18} />
+              </button>
+              <button onClick={onClose} className="hover:bg-primary-foreground/20 p-2 rounded-full transition-colors" title="Close">
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Chat Body */}
@@ -101,18 +127,34 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Preset Suggestions */}
+          {messages.length === 1 && !isTyping && (
+             <div className="px-4 pb-2 flex flex-wrap gap-2">
+                {suggestions.map((s, i) => (
+                   <button 
+                      key={i} 
+                      onClick={() => handleSend(s)}
+                      className="text-xs bg-secondary hover:bg-secondary/80 text-foreground border border-border px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors"
+                   >
+                      <Sparkles size={12} className="text-primary"/> {s}
+                   </button>
+                ))}
+             </div>
+          )}
+
           {/* Input Area */}
-          <div className="p-4 bg-background/50 border-t border-border flex gap-2">
+          <div className="p-4 bg-background/80 backdrop-blur-md border-t border-border flex gap-2">
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask about live issues..."
-              className="flex-1 bg-background border border-border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 bg-secondary/50 border border-border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             />
             <button 
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || isTyping}
               className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 disabled:opacity-50"
             >
