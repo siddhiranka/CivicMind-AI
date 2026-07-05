@@ -72,7 +72,7 @@ const Report = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/complaints', {
+      const response = await fetch('/api/complaints', {
         method: 'POST',
         body: formData
       });

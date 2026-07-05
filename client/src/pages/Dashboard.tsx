@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [isSeeding, setIsSeeding] = useState(false);
 
   const fetchComplaints = () => {
-    fetch('http://localhost:5000/api/complaints')
+    fetch('/api/complaints')
       .then(res => res.json())
       .then(data => setComplaints(data))
       .catch(err => console.error(err));
@@ -25,7 +25,7 @@ const Dashboard = () => {
   const handleSeed = async () => {
     setIsSeeding(true);
     try {
-      await fetch('http://localhost:5000/api/complaints/seed', { method: 'POST' });
+      await fetch('/api/complaints/seed', { method: 'POST' });
       fetchComplaints();
     } catch (error) {
       console.error(error);
@@ -83,7 +83,7 @@ const Dashboard = () => {
 
   const handleApprove = async (id: string) => {
      try {
-        await fetch(`http://localhost:5000/api/complaints/${id}/status`, {
+        await fetch(`/api/complaints/${id}/status`, {
            method: 'PATCH',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({ status: 'Assigned' })

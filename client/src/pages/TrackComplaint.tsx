@@ -19,7 +19,7 @@ const TrackComplaint = () => {
     setTrackingData(null);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/complaints/track/${complaintId.trim()}`);
+      const res = await fetch(`/api/complaints/track/${complaintId.trim()}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error('Complaint ID not found. Please check and try again.');
         throw new Error('Failed to fetch tracking data.');
