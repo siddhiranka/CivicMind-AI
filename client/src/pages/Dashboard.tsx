@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapIcon, AlertTriangle, CheckCircle2, Info, FileText, Download, Filter, Search, Database, Bot, ChevronRight, MapPin, Activity } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import jsPDF from 'jspdf';
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 const Dashboard = () => {
@@ -10,8 +10,20 @@ const Dashboard = () => {
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [mapCenter, setMapCenter] = useState({lat: 19.0760, lng: 72.8777});
   const [mapZoom, setMapZoom] = useState(11);
+
+  const LiveMapChild = ({ center, zoom }: { center: google.maps.LatLngLiteral, zoom: number }) => {
+    const map = useMap();
+    useEffect(() => {
+       if (map) {
+          map.panTo(center);
+          map.setZoom(zoom);
+       }
+    }, [map, center, zoom]);
+    return null;
+  };
 
   const fetchComplaints = () => {
     fetch('/api/complaints')
@@ -57,61 +69,73 @@ const Dashboard = () => {
     }, 100);
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
+  const handleExportPDF = async () => {
+    setIsExporting(true);
     
-    if (selectedComplaint) {
-      doc.setFontSize(20);
-      doc.text(`Incident Report: ${selectedComplaint.complaintId || 'Unknown'}`, 14, 22);
-      
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
-      
-      doc.setFontSize(14);
-      doc.text('Issue Details', 14, 45);
-      
-      doc.setFontSize(12);
-      doc.text(`Issue: ${selectedComplaint.issueDetected || selectedComplaint.originalDescription || 'N/A'}`, 14, 55);
-      const addressText = doc.splitTextToSize(`Location: ${selectedComplaint.location?.address || 'N/A'}`, 180);
-      doc.text(addressText, 14, 65);
-      
-      const currentY = 65 + (addressText.length * 7);
-      
-      doc.text(`Severity: ${selectedComplaint.severity}`, 14, currentY);
-      doc.text(`Status: ${selectedComplaint.status}`, 14, currentY + 10);
-      doc.text(`Assigned Department: ${selectedComplaint.suggestedDepartment || 'Pending'}`, 14, currentY + 20);
-      
-      doc.setFontSize(14);
-      doc.text('AI Analysis', 14, currentY + 40);
-      
-      doc.setFontSize(12);
-      const splitText = doc.splitTextToSize(selectedComplaint.riskAnalysis || 'No analysis available.', 180);
-      doc.text(splitText, 14, currentY + 50);
+    // Allow UI to update to show loading state before blocking the main thread
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-      doc.save(`Issue_Report_${selectedComplaint.complaintId || 'Custom'}.pdf`);
-    } else {
-      doc.setFontSize(20);
-      doc.text('CivicMind AI - Daily Issue Report', 14, 22);
+    try {
+      const doc = new jsPDF();
       
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
-      
-      const tableData = complaints.map(c => [
-         c.complaintId || 'CM-XXXX',
-         c.issueDetected || c.originalDescription || 'N/A',
-         c.location?.address || 'N/A',
-         c.severity,
-         c.status
-      ]);
+      if (selectedComplaint) {
+        doc.setFontSize(20);
+        doc.text(`Incident Report: ${selectedComplaint.complaintId || 'Unknown'}`, 14, 22);
+        
+        doc.setFontSize(12);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
+        
+        doc.setFontSize(14);
+        doc.text('Issue Details', 14, 45);
+        
+        doc.setFontSize(12);
+        doc.text(`Issue: ${selectedComplaint.issueDetected || selectedComplaint.originalDescription || 'N/A'}`, 14, 55);
+        const addressText = doc.splitTextToSize(`Location: ${selectedComplaint.location?.address || 'N/A'}`, 180);
+        doc.text(addressText, 14, 65);
+        
+        const currentY = 65 + (addressText.length * 7);
+        
+        doc.text(`Severity: ${selectedComplaint.severity}`, 14, currentY);
+        doc.text(`Status: ${selectedComplaint.status}`, 14, currentY + 10);
+        doc.text(`Assigned Department: ${selectedComplaint.suggestedDepartment || 'Pending'}`, 14, currentY + 20);
+        
+        doc.setFontSize(14);
+        doc.text('AI Analysis', 14, currentY + 40);
+        
+        doc.setFontSize(12);
+        const splitText = doc.splitTextToSize(selectedComplaint.riskAnalysis || 'No analysis available.', 180);
+        doc.text(splitText, 14, currentY + 50);
 
-      // @ts-ignore
-      doc.autoTable({
-         startY: 40,
-         head: [['ID', 'Issue', 'Location', 'Priority', 'Status']],
-         body: tableData,
-      });
+        doc.save(`Issue_Report_${selectedComplaint.complaintId || 'Custom'}.pdf`);
+      } else {
+        doc.setFontSize(20);
+        doc.text('CivicMind AI - Daily Issue Report', 14, 22);
+        
+        doc.setFontSize(12);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
+        
+        const tableData = complaints.map(c => [
+           c.complaintId || 'CM-XXXX',
+           c.issueDetected || c.originalDescription || 'N/A',
+           c.location?.address || 'N/A',
+           c.severity,
+           c.status
+        ]);
 
-      doc.save('CivicMind_Report.pdf');
+        // @ts-ignore
+        doc.autoTable({
+           startY: 40,
+           head: [['ID', 'Issue', 'Location', 'Priority', 'Status']],
+           body: tableData,
+        });
+
+        doc.save('CivicMind_Report.pdf');
+      }
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      alert('Failed to generate PDF. Check console for details.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -169,8 +193,9 @@ const Dashboard = () => {
                     className="bg-background border border-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-48 lg:w-64"
                  />
               </div>
-              <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-medium hover:bg-secondary/80">
-                 <Download size={16}/> Export PDF
+              <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-medium hover:bg-secondary/80 disabled:opacity-50">
+                 {isExporting ? <div className="w-4 h-4 border-2 border-t-transparent border-foreground rounded-full animate-spin"></div> : <Download size={16}/>} 
+                 {isExporting ? 'Generating...' : 'Export PDF'}
               </button>
            </div>
         </div>
@@ -257,6 +282,7 @@ const Dashboard = () => {
                     colorScheme="DARK"
                     onClick={() => setSelectedComplaint(null)}
                  >
+                    <LiveMapChild center={mapCenter} zoom={mapZoom} />
                     {complaints.map((c, idx) => {
                        if (!c.location || !c.location.lat) return null;
                        const isCritical = c.severity === 'Critical' || c.severity === 'High';
