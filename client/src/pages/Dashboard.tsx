@@ -59,28 +59,60 @@ const Dashboard = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('CivicMind AI - Daily Issue Report', 14, 22);
     
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
-    
-    const tableData = complaints.map(c => [
-       c.complaintId || 'CM-XXXX',
-       c.issueDetected || c.originalDescription || 'N/A',
-       c.location?.address || 'N/A',
-       c.severity,
-       c.status
-    ]);
+    if (selectedComplaint) {
+      doc.setFontSize(20);
+      doc.text(`Incident Report: ${selectedComplaint.complaintId || 'Unknown'}`, 14, 22);
+      
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
+      
+      doc.setFontSize(14);
+      doc.text('Issue Details', 14, 45);
+      
+      doc.setFontSize(12);
+      doc.text(`Issue: ${selectedComplaint.issueDetected || selectedComplaint.originalDescription || 'N/A'}`, 14, 55);
+      const addressText = doc.splitTextToSize(`Location: ${selectedComplaint.location?.address || 'N/A'}`, 180);
+      doc.text(addressText, 14, 65);
+      
+      const currentY = 65 + (addressText.length * 7);
+      
+      doc.text(`Severity: ${selectedComplaint.severity}`, 14, currentY);
+      doc.text(`Status: ${selectedComplaint.status}`, 14, currentY + 10);
+      doc.text(`Assigned Department: ${selectedComplaint.suggestedDepartment || 'Pending'}`, 14, currentY + 20);
+      
+      doc.setFontSize(14);
+      doc.text('AI Analysis', 14, currentY + 40);
+      
+      doc.setFontSize(12);
+      const splitText = doc.splitTextToSize(selectedComplaint.riskAnalysis || 'No analysis available.', 180);
+      doc.text(splitText, 14, currentY + 50);
 
-    // @ts-ignore
-    doc.autoTable({
-       startY: 40,
-       head: [['ID', 'Issue', 'Location', 'Priority', 'Status']],
-       body: tableData,
-    });
+      doc.save(`Issue_Report_${selectedComplaint.complaintId || 'Custom'}.pdf`);
+    } else {
+      doc.setFontSize(20);
+      doc.text('CivicMind AI - Daily Issue Report', 14, 22);
+      
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
+      
+      const tableData = complaints.map(c => [
+         c.complaintId || 'CM-XXXX',
+         c.issueDetected || c.originalDescription || 'N/A',
+         c.location?.address || 'N/A',
+         c.severity,
+         c.status
+      ]);
 
-    doc.save('CivicMind_Report.pdf');
+      // @ts-ignore
+      doc.autoTable({
+         startY: 40,
+         head: [['ID', 'Issue', 'Location', 'Priority', 'Status']],
+         body: tableData,
+      });
+
+      doc.save('CivicMind_Report.pdf');
+    }
   };
 
   // Dynamic Calculations
