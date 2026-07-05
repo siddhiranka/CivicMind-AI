@@ -5,6 +5,17 @@ import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-m
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
+const LiveMapChild = ({ center, zoom }: { center: google.maps.LatLngLiteral, zoom: number }) => {
+  const map = useMap();
+  useEffect(() => {
+     if (map) {
+        map.panTo(center);
+        map.setZoom(zoom);
+     }
+  }, [map, center, zoom]);
+  return null;
+};
+
 const Dashboard = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
@@ -13,17 +24,6 @@ const Dashboard = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [mapCenter, setMapCenter] = useState({lat: 19.0760, lng: 72.8777});
   const [mapZoom, setMapZoom] = useState(11);
-
-  const LiveMapChild = ({ center, zoom }: { center: google.maps.LatLngLiteral, zoom: number }) => {
-    const map = useMap();
-    useEffect(() => {
-       if (map) {
-          map.panTo(center);
-          map.setZoom(zoom);
-       }
-    }, [map, center, zoom]);
-    return null;
-  };
 
   const fetchComplaints = () => {
     fetch('/api/complaints')
